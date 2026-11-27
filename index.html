@@ -109,19 +109,19 @@ function Araci-Calistir ($depoAdi) {
 while ($true) {
     Clear-Host
     Write-Host "=== FRKOMER SYSTEM & SETUP CONTROL CENTER ===" -ForegroundColor Cyan
-    Write-Host "1  - Office Setup & Management Tool" -ForegroundColor Yellow
-    Write-Host "2  - Windows ISO & Upgrade Tool" -ForegroundColor Yellow
-    Write-Host "3  - Automatic Software Installer" -ForegroundColor Yellow
-    Write-Host "4  - System Maintenance & Drivers" -ForegroundColor Yellow
-    Write-Host "5  - System Diagnostics & License" -ForegroundColor Yellow
-    Write-Host "0  - Exit (Cikis)" -ForegroundColor Gray
-    Write-Host "99 - Refresh Main Menu (Ana Menuyu Yenile)" -ForegroundColor DarkGray
+    Write-Host "1  - Office Setup & Management Tool (Office 2021/2024 Indir, Kur, Etkinlestir)" -ForegroundColor Yellow
+    Write-Host "2  - Windows ISO & Upgrade Tool     (Windows 10/11 ISO Indir, Yukselt, Format USB)" -ForegroundColor Yellow
+    Write-Host "3  - Automatic Software Installer   (Chrome, WinRAR, Adobe, AnyDesk vb. Kur)" -ForegroundColor Yellow
+    Write-Host "4  - System Maintenance & Drivers   (Temizlik, Onarim, Surucu, Imaj ve Klonlama)" -ForegroundColor Yellow
+    Write-Host "5  - System Diagnostics & License   (Donanim, BIOS Lisans, Disk/Pil Sagligi, Ag)" -ForegroundColor Yellow
+    Write-Host "0  - Exit                           (Cikis)" -ForegroundColor Gray
+    Write-Host "99 - Refresh Main Menu              (Ana Menuyu Yenile / Basa Don)" -ForegroundColor DarkGray
     Write-Host "(Bilgi: Alt araclarda 0 yazarak o aracin basina, 99 yazarak Ana Menuye donebilirsiniz)" -ForegroundColor DarkGray
     Write-Host ""
 
     $secim = ""
     try {
-        $secim = Read-Host "Select Tool (0-5 veya 99)"
+        $secim = Read-Host "Select Tool / Arac Secin (0-5 veya 99)"
     } catch {
         continue
     }
