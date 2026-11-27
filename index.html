@@ -1,0 +1,99 @@
+function Sistem-Teshis-Menusu {
+    while ($true) {
+        Clear-Host
+        Write-Host "=== SYSTEM DIAGNOSTICS, LICENSE & NETWORK ===" -ForegroundColor Cyan
+        Write-Host "1 - Hardware, Serial No & Windows OEM License (Donanim, Seri No ve Windows Lisansi)" -ForegroundColor Yellow
+        Write-Host "2 - Disk Health (SMART) & Battery Report      (Disk Sagligi ve Pil Omru Raporu)" -ForegroundColor Yellow
+        Write-Host "3 - Network Info & Enable Office File Sharing (Ag Bilgileri ve Dosya Paylasimi Ac)" -ForegroundColor Yellow
+        Write-Host "0 - Back to Main Menu                         (Ana Menuye Don)" -ForegroundColor Gray
+        Write-Host ""
+
+        $altSecim = Read-Host "Select Option / Islem Secin (0-3)"
+
+        if ($altSecim -eq "0") {
+            break
+        } elseif ($altSecim -eq "1") {
+            Write-Host ""
+            Write-Host "=== HARDWARE & LICENSE SUMMARY ===" -ForegroundColor Cyan
+            $cs = Get-CimInstance Win32_ComputerSystem
+            $bios = Get-CimInstance Win32_BIOS
+            $cpu = Get-CimInstance Win32_Processor
+            $os = Get-CimInstance Win32_OperatingSystem
+            $ramGB = [math]::Round($cs.TotalPhysicalMemory / 1GB, 1)
+            $oemKey = (Get-CimInstance -Query 'select * from SoftwareLicensingService').OA3xOriginalProductKey
+
+            Write-Host "Manufacturer / Marka : $($cs.Manufacturer)" -ForegroundColor Yellow
+            Write-Host "Model                : $($cs.Model)" -ForegroundColor Yellow
+            Write-Host "Serial Number        : $($bios.SerialNumber)" -ForegroundColor Yellow
+            Write-Host "Processor / Islemci  : $($cpu.Name)" -ForegroundColor Yellow
+            Write-Host "RAM                  : $ramGB GB" -ForegroundColor Yellow
+            Write-Host "Windows Edition      : $($os.Caption) ($($os.OSArchitecture))" -ForegroundColor Yellow
+            if ($oemKey) {
+                Write-Host "BIOS OEM Windows Key : $oemKey" -ForegroundColor Green
+            } else {
+                Write-Host "BIOS OEM Windows Key : Not found in BIOS / BIOS icinde gomulu anahtar yok" -ForegroundColor Gray
+            }
+            Write-Host ""
+            cscript //nologo C:\Windows\System32\slmgr.vbs /xpr
+            Write-Host ""
+            Read-Host "Press Enter to continue / Devam etmek icin Enter'a basin"
+        } elseif ($altSecim -eq "2") {
+            Write-Host ""
+            Write-Host "=== DISK HEALTH (SMART) ===" -ForegroundColor Cyan
+            Get-PhysicalDisk | Select-Object FriendlyName, MediaType, HealthStatus, OperationalStatus, @{Name="Size(GB)";Expression={[math]::Round($_.Size/1GB,1)}} | Format-Table -AutoSize
+            Write-Host "Generating Battery Report / Pil sagligi raporu hazirlaniyor..." -ForegroundColor Cyan
+            $batYol = "C:\battery-report.html"
+            powercfg /batteryreport /output $batYol | Out-Null
+            if (Test-Path $batYol) {
+                Write-Host "Battery report saved to: $batYol / Pil raporu aciliyor..." -ForegroundColor Green
+                Start-Process $batYol
+            } else {
+                Write-Host "Desktop PC or no battery detected / Masaustu PC veya pil bulunamadi." -ForegroundColor Yellow
+            }
+            Write-Host ""
+            Read-Host "Press Enter to continue / Devam etmek icin Enter'a basin"
+        } elseif ($altSecim -eq "3") {
+            Write-Host ""
+            Write-Host "=== NETWORK CONFIGURATION ===" -ForegroundColor Cyan
+            Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -notmatch "Loopback" } | Select-Object InterfaceAlias, IPAddress, PrefixLength | Format-Table -AutoSize
+            $paylasim = Read-Host "Enable Network Discovery & File/Printer Sharing? / Ag bulma ve dosya-yazici paylasimi acilsin mi? (E / H)"
+            if ($paylasim -in @("E", "e", "Y", "y")) {
+                netsh advfirewall firewall set rule group="Network Discovery" new enable=Yes | Out-Null
+                netsh advfirewall firewall set rule group="File and Printer Sharing" new enable=Yes | Out-Null
+                Write-Host "File & Printer Sharing enabled! / Dosya ve yazici paylasimi aktif edildi!" -ForegroundColor Green
+            }
+            Write-Host ""
+            Read-Host "Press Enter to continue / Devam etmek icin Enter'a basin"
+        }
+    }
+}
+while ($true) {
+    Clear-Host
+    Write-Host "=== FRKOMER SYSTEM & SETUP CONTROL CENTER ===" -ForegroundColor Cyan
+    Write-Host "1 - Office Setup & Management Tool (Office 2021/2024 Indir, Kur, Etkinlestir)" -ForegroundColor Yellow
+    Write-Host "2 - Windows ISO & Upgrade Tool     (Windows 10/11 ISO Indir, Yukselt, Format USB)" -ForegroundColor Yellow
+    Write-Host "3 - Automatic Software Installer   (Chrome, WinRAR, Adobe, AnyDesk vb. Kur)" -ForegroundColor Yellow
+    Write-Host "4 - System Maintenance & Drivers   (Temizlik, Onarim, Surucu, Imaj ve Klonlama)" -ForegroundColor Yellow
+    Write-Host "5 - System Diagnostics & License   (Donanim, BIOS Lisans, Disk/Pil Sagligi, Ag)" -ForegroundColor Yellow
+    Write-Host "0 - Exit                           (Cikis)" -ForegroundColor Gray
+    Write-Host ""
+
+    $secim = Read-Host "Select Tool / Arac Secin (0-5)"
+
+    if ($secim -eq "0") {
+        break
+    } elseif ($secim -eq "1") {
+        irm "https://github.io" | iex
+    } elseif ($secim -eq "2") {
+        irm "https://github.io" | iex
+    } elseif ($secim -eq "3") {
+        irm "https://github.io" | iex
+    } elseif ($secim -eq "4") {
+        irm "https://github.io" | iex
+    } elseif ($secim -eq "5") {
+        Sistem-Teshis-Menusu
+    } else {
+        Write-Host "Invalid selection / Gecersiz secim yaptiniz." -ForegroundColor Red
+        Start-Sleep -Seconds 2
+    }
+}
