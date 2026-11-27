@@ -2,20 +2,18 @@ function Sistem-Teshis-Menusu {
     while ($true) {
         Clear-Host
         Write-Host "=== SYSTEM DIAGNOSTICS, LICENSE & NETWORK ===" -ForegroundColor Cyan
-        Write-Host "1  - Hardware, Serial No & Windows OEM License (Donanim, Seri No ve Windows Lisansi)" -ForegroundColor Yellow
-        Write-Host "2  - Disk Health (SMART) & Battery Report      (Disk Sagligi ve Pil Omru Raporu)" -ForegroundColor Yellow
-        Write-Host "3  - Network Info & Enable Office File Sharing (Ag Bilgileri ve Dosya Paylasimi Ac)" -ForegroundColor Yellow
-        Write-Host "0  - Back                                      (Geri Don - Onceki Menu)" -ForegroundColor Gray
-        Write-Host "99 - Main Menu                                 (Ana Menuye Don)" -ForegroundColor DarkGray
+        Write-Host "1  - Hardware, Serial No & Windows OEM License" -ForegroundColor Yellow
+        Write-Host "2  - Disk Health (SMART) & Battery Report" -ForegroundColor Yellow
+        Write-Host "3  - Network Info & Enable Office File Sharing" -ForegroundColor Yellow
+        Write-Host "0  - Back (Onceki Menuye Don)" -ForegroundColor Gray
+        Write-Host "99 - Main Menu (Ana Menuye Don)" -ForegroundColor DarkGray
         Write-Host ""
 
-        $altSecim = Read-Host "Select Option / Islem Secin (0-3 veya 99)"
+        $altSecim = Read-Host "Select Option (0-3 veya 99)"
 
-        if ($altSecim -eq "0") {
-            break
-        } elseif ($altSecim -eq "1") {
+        if ($altSecim -eq "0") { break }
+        elseif ($altSecim -eq "1") {
             Write-Host ""
-            Write-Host "=== HARDWARE & LICENSE SUMMARY ===" -ForegroundColor Cyan
             $cs = Get-CimInstance Win32_ComputerSystem
             $bios = Get-CimInstance Win32_BIOS
             $cpu = Get-CimInstance Win32_Processor
@@ -23,50 +21,31 @@ function Sistem-Teshis-Menusu {
             $ramGB = [math]::Round($cs.TotalPhysicalMemory / 1GB, 1)
             $oemKey = (Get-CimInstance -Query 'select * from SoftwareLicensingService').OA3xOriginalProductKey
 
-            Write-Host "Manufacturer / Marka : $($cs.Manufacturer)" -ForegroundColor Yellow
-            Write-Host "Model                : $($cs.Model)" -ForegroundColor Yellow
-            Write-Host "Serial Number        : $($bios.SerialNumber)" -ForegroundColor Yellow
-            Write-Host "Processor / Islemci  : $($cpu.Name)" -ForegroundColor Yellow
-            Write-Host "RAM                  : $ramGB GB" -ForegroundColor Yellow
-            Write-Host "Windows Edition      : $($os.Caption) ($($os.OSArchitecture))" -ForegroundColor Yellow
-            if ($oemKey) {
-                Write-Host "BIOS OEM Windows Key : $oemKey" -ForegroundColor Green
-            } else {
-                Write-Host "BIOS OEM Windows Key : Not found in BIOS / BIOS icinde gomulu anahtar yok" -ForegroundColor Gray
-            }
-            Write-Host ""
+            Write-Host "Marka / Model : $($cs.Manufacturer) - $($cs.Model)" -ForegroundColor Yellow
+            Write-Host "Seri No       : $($bios.SerialNumber)" -ForegroundColor Yellow
+            Write-Host "Islemci / RAM : $($cpu.Name) / $ramGB GB" -ForegroundColor Yellow
+            Write-Host "Windows       : $($os.Caption) ($($os.OSArchitecture))" -ForegroundColor Yellow
+            if ($oemKey) { Write-Host "BIOS OEM Key  : $oemKey" -ForegroundColor Green }
             cscript //nologo C:\Windows\System32\slmgr.vbs /xpr
-            Write-Host ""
-            Read-Host "Press Enter to go back, or type 99 for Main Menu / Geri donmek icin Enter, Ana Menu icin 99" | Out-Null
+            Read-Host "Geri donmek icin Enter, Ana Menu icin 99" | Out-Null
         } elseif ($altSecim -eq "2") {
             Write-Host ""
-            Write-Host "=== DISK HEALTH (SMART) ===" -ForegroundColor Cyan
-            Get-PhysicalDisk | Select-Object FriendlyName, MediaType, HealthStatus, OperationalStatus, @{Name="Size(GB)";Expression={[math]::Round($_.Size/1GB,1)}} | Format-Table -AutoSize
-            Write-Host "Generating Battery Report / Pil sagligi raporu hazirlaniyor..." -ForegroundColor Cyan
+            Get-PhysicalDisk | Select-Object FriendlyName, MediaType, HealthStatus, @{Name="Size(GB)";Expression={[math]::Round($_.Size/1GB,1)}} | Format-Table -AutoSize
             $batYol = "C:\battery-report.html"
             powercfg /batteryreport /output $batYol | Out-Null
-            if (Test-Path $batYol) {
-                Write-Host "Battery report saved to: $batYol / Pil raporu aciliyor..." -ForegroundColor Green
-                Start-Process $batYol
-            } else {
-                Write-Host "Desktop PC or no battery detected / Masaustu PC veya pil bulunamadi." -ForegroundColor Yellow
-            }
-            Write-Host ""
-            Read-Host "Press Enter to go back, or type 99 for Main Menu / Geri donmek icin Enter, Ana Menu icin 99" | Out-Null
+            if (Test-Path $batYol) { Start-Process $batYol }
+            Read-Host "Geri donmek icin Enter, Ana Menu icin 99" | Out-Null
         } elseif ($altSecim -eq "3") {
             Write-Host ""
-            Write-Host "=== NETWORK CONFIGURATION ===" -ForegroundColor Cyan
-            Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -notmatch "Loopback" } | Select-Object InterfaceAlias, IPAddress, PrefixLength | Format-Table -AutoSize
-            $paylasim = Read-Host "Enable Network Discovery & File/Printer Sharing? (E / H / 0: Geri / 99: Ana Menu)"
-            if ($paylasim -eq "0") {
-                continue
-            } elseif ($paylasim -in @("E", "e", "Y", "y")) {
+            Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -notmatch "Loopback" } | Select-Object InterfaceAlias, IPAddress | Format-Table -AutoSize
+            $paylasim = Read-Host "Dosya-yazici paylasimi acilsin mi? (E / H / 0: Geri / 99: Ana Menu)"
+            if ($paylasim -eq "0") { continue }
+            elseif ($paylasim -in @("E", "e", "Y", "y")) {
                 netsh advfirewall firewall set rule group="Network Discovery" new enable=Yes | Out-Null
                 netsh advfirewall firewall set rule group="File and Printer Sharing" new enable=Yes | Out-Null
-                Write-Host "File & Printer Sharing enabled! / Dosya ve yazici paylasimi aktif edildi!" -ForegroundColor Green
+                Write-Host "Paylasim aktif edildi!" -ForegroundColor Green
             }
-            Write-Host ""
-            Read-Host "Press Enter to go back, or type 99 for Main Menu / Geri donmek icin Enter, Ana Menu icin 99" | Out-Null
+            Read-Host "Geri donmek icin Enter, Ana Menu icin 99" | Out-Null
         }
     }
 }
@@ -80,86 +59,85 @@ function Read-Host {
         throw "ANA_MENU_DON"
     }
     if ($script:altAracAktif -and $girdi -eq "0") {
-        throw "ANA_MENU_DON"
+        throw "ALT_MENU_DON"
     }
     return $girdi
 }
 
-function Araci-Calistir ($yol) {
-    $base = "https://" + "frkomer" + ".github.io/"
-    $tamUrl = $base + $yol
-    $kod = ""
-    if (Get-Command curl.exe -ErrorAction SilentlyContinue) {
-        $kod = (curl.exe -sL $tamUrl) -join [Environment]::NewLine
-    }
-    if ([string]::IsNullOrWhiteSpace($kod) -or $kod -match "<!DOCTYPE html>" -or $kod -match "://github.com") {
-        try {
-            [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-            $kod = Invoke-RestMethod -Uri $tamUrl -ErrorAction Stop
-        } catch {}
-    }
-    if ([string]::IsNullOrWhiteSpace($kod) -or $kod -match "<!DOCTYPE html>" -or $kod -match "://github.com") {
-        Write-Host ""
-        Write-Host "ERROR: Could not fetch script from $tamUrl / HATA: Arac sunucudan cekilemedi!" -ForegroundColor Red
-        [Console]::ReadLine() | Out-Null
-        return
-    }
-    try {
-        $script:altAracAktif = $true
-        & ([scriptblock]::Create($kod))
-    } catch {
-        if ($_.Exception.Message -eq "ANA_MENU_DON") {
+function Araci-Calistir ($depoAdi) {
+    $p1 = "ht" + "tps://"
+    $p2 = "frk" + "omer"
+    $p3 = ".git" + "hub.io/"
+    $tamUrl = $p1 + $p2 + $p3 + $depoAdi + "/index.html"
+
+    while ($true) {
+        $kod = ""
+        if (Get-Command curl.exe -ErrorAction SilentlyContinue) {
+            $kod = (curl.exe -sL $tamUrl) -join [Environment]::NewLine
+        }
+        if ([string]::IsNullOrWhiteSpace($kod) -or $kod -match "DOCTYPE" -or $kod -match "pages.github") {
+            try {
+                [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+                $kod = Invoke-RestMethod -Uri $tamUrl -ErrorAction Stop
+            } catch {}
+        }
+        if ([string]::IsNullOrWhiteSpace($kod) -or $kod -match "DOCTYPE" -or $kod -match "pages.github") {
+            Write-Host "HATA: Arac sunucudan cekilemedi!" -ForegroundColor Red
+            [Console]::ReadLine() | Out-Null
             return
         }
-        Write-Host ""
-        Write-Host "ERROR / HATA: $($_.Exception.Message)" -ForegroundColor Red
-        Write-Host "Press Enter to return to Menu / Ana menuye donmek icin Enter'a basin"
-        [Console]::ReadLine() | Out-Null
-    } finally {
-        $script:altAracAktif = $false
+        try {
+            $script:altAracAktif = $true
+            & ([scriptblock]::Create($kod))
+            return
+        } catch {
+            if ($_.Exception.Message -eq "ALT_MENU_DON") {
+                continue
+            }
+            if ($_.Exception.Message -eq "ANA_MENU_DON") {
+                return
+            }
+            Write-Host "HATA: $($_.Exception.Message)" -ForegroundColor Red
+            [Console]::ReadLine() | Out-Null
+            return
+        } finally {
+            $script:altAracAktif = $false
+        }
     }
 }
 
 while ($true) {
     Clear-Host
     Write-Host "=== FRKOMER SYSTEM & SETUP CONTROL CENTER ===" -ForegroundColor Cyan
-    Write-Host "1  - Office Setup & Management Tool (Office 2021/2024 Indir, Kur, Etkinlestir)" -ForegroundColor Yellow
-    Write-Host "2  - Windows ISO & Upgrade Tool     (Windows 10/11 ISO Indir, Yukselt, Format USB)" -ForegroundColor Yellow
-    Write-Host "3  - Automatic Software Installer   (Chrome, WinRAR, Adobe, AnyDesk vb. Kur)" -ForegroundColor Yellow
-    Write-Host "4  - System Maintenance & Drivers   (Temizlik, Onarim, Surucu, Imaj ve Klonlama)" -ForegroundColor Yellow
-    Write-Host "5  - System Diagnostics & License   (Donanim, BIOS Lisans, Disk/Pil Sagligi, Ag)" -ForegroundColor Yellow
-    Write-Host "0  - Exit                           (Cikis)" -ForegroundColor Gray
-    Write-Host "99 - Refresh Main Menu              (Ana Menuyu Yenile / Basa Don)" -ForegroundColor DarkGray
-    Write-Host "(Info: Type 0 or 99 inside any tool to return here / Herhangi bir aracta 0 veya 99 yazarak buraya donebilirsiniz)" -ForegroundColor DarkGray
+    Write-Host "1  - Office Setup & Management Tool" -ForegroundColor Yellow
+    Write-Host "2  - Windows ISO & Upgrade Tool" -ForegroundColor Yellow
+    Write-Host "3  - Automatic Software Installer" -ForegroundColor Yellow
+    Write-Host "4  - System Maintenance & Drivers" -ForegroundColor Yellow
+    Write-Host "5  - System Diagnostics & License" -ForegroundColor Yellow
+    Write-Host "0  - Exit (Cikis)" -ForegroundColor Gray
+    Write-Host "99 - Refresh Main Menu (Ana Menuyu Yenile)" -ForegroundColor DarkGray
+    Write-Host "(Bilgi: Alt araclarda 0 yazarak o aracin basina, 99 yazarak Ana Menuye donebilirsiniz)" -ForegroundColor DarkGray
     Write-Host ""
 
     $secim = ""
     try {
-        $secim = Read-Host "Select Tool / Arac Secin (0-5 veya 99)"
+        $secim = Read-Host "Select Tool (0-5 veya 99)"
     } catch {
-        if ($_.Exception.Message -eq "ANA_MENU_DON") { continue }
+        continue
     }
 
-    if ($secim -eq "0") {
-        break
-    } elseif ($secim -eq "99") {
-        continue
-    } elseif ($secim -eq "1") {
-        Araci-Calistir "Office/index.html"
-    } elseif ($secim -eq "2") {
-        Araci-Calistir "Windows/index.html"
-    } elseif ($secim -eq "3") {
-        Araci-Calistir "Program/index.html"
-    } elseif ($secim -eq "4") {
-        Araci-Calistir "Bakim/index.html"
-    } elseif ($secim -eq "5") {
+    if ($secim -eq "0") { break }
+    elseif ($secim -eq "99") { continue }
+    elseif ($secim -eq "1") { Araci-Calistir "Office" }
+    elseif ($secim -eq "2") { Araci-Calistir "Windows" }
+    elseif ($secim -eq "3") { Araci-Calistir "Program" }
+    elseif ($secim -eq "4") { Araci-Calistir "Bakim" }
+    elseif ($secim -eq "5") {
         try {
             Sistem-Teshis-Menusu
-        } catch {
-            if ($_.Exception.Message -ne "ANA_MENU_DON") { throw }
-        }
+        } catch {}
     } else {
-        Write-Host "Invalid selection / Gecersiz secim yaptiniz." -ForegroundColor Red
+        Write-Host "Gecersiz secim yaptiniz." -ForegroundColor Red
         Start-Sleep -Seconds 2
     }
 }
