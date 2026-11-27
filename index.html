@@ -70,7 +70,7 @@ function Sistem-Teshis-Menusu {
 function Araci-Calistir ($url) {
     try {
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-        $kod = (Invoke-WebRequest -Uri $url -UseBasicParsing -UserAgent "curl/8.0").Content
+        $kod = Invoke-RestMethod -Uri $url
         & ([scriptblock]::Create($kod))
     } catch {
         Write-Host ""
@@ -108,5 +108,4 @@ while ($true) {
         Write-Host "Invalid selection / Gecersiz secim yaptiniz." -ForegroundColor Red
         Start-Sleep -Seconds 2
     }
-}
-   
+}  
