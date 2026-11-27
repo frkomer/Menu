@@ -2,13 +2,14 @@ function Sistem-Teshis-Menusu {
     while ($true) {
         Clear-Host
         Write-Host "=== SYSTEM DIAGNOSTICS, LICENSE & NETWORK ===" -ForegroundColor Cyan
-        Write-Host "1 - Hardware, Serial No & Windows OEM License (Donanim, Seri No ve Windows Lisansi)" -ForegroundColor Yellow
-        Write-Host "2 - Disk Health (SMART) & Battery Report      (Disk Sagligi ve Pil Omru Raporu)" -ForegroundColor Yellow
-        Write-Host "3 - Network Info & Enable Office File Sharing (Ag Bilgileri ve Dosya Paylasimi Ac)" -ForegroundColor Yellow
-        Write-Host "0 - Back to Main Menu                         (Ana Menuye Don)" -ForegroundColor Gray
+        Write-Host "1  - Hardware, Serial No & Windows OEM License (Donanim, Seri No ve Windows Lisansi)" -ForegroundColor Yellow
+        Write-Host "2  - Disk Health (SMART) & Battery Report      (Disk Sagligi ve Pil Omru Raporu)" -ForegroundColor Yellow
+        Write-Host "3  - Network Info & Enable Office File Sharing (Ag Bilgileri ve Dosya Paylasimi Ac)" -ForegroundColor Yellow
+        Write-Host "0  - Back                                      (Geri Don - Onceki Menu)" -ForegroundColor Gray
+        Write-Host "99 - Main Menu                                 (Ana Menuye Don)" -ForegroundColor DarkGray
         Write-Host ""
 
-        $altSecim = Read-Host "Select Option / Islem Secin (0-3)"
+        $altSecim = Read-Host "Select Option / Islem Secin (0-3 veya 99)"
 
         if ($altSecim -eq "0") {
             break
@@ -36,7 +37,7 @@ function Sistem-Teshis-Menusu {
             Write-Host ""
             cscript //nologo C:\Windows\System32\slmgr.vbs /xpr
             Write-Host ""
-            Read-Host "Press Enter to continue / Devam etmek icin Enter'a basin"
+            Read-Host "Press Enter to go back, or type 99 for Main Menu / Geri donmek icin Enter, Ana Menu icin 99" | Out-Null
         } elseif ($altSecim -eq "2") {
             Write-Host ""
             Write-Host "=== DISK HEALTH (SMART) ===" -ForegroundColor Cyan
@@ -51,27 +52,34 @@ function Sistem-Teshis-Menusu {
                 Write-Host "Desktop PC or no battery detected / Masaustu PC veya pil bulunamadi." -ForegroundColor Yellow
             }
             Write-Host ""
-            Read-Host "Press Enter to continue / Devam etmek icin Enter'a basin"
+            Read-Host "Press Enter to go back, or type 99 for Main Menu / Geri donmek icin Enter, Ana Menu icin 99" | Out-Null
         } elseif ($altSecim -eq "3") {
             Write-Host ""
             Write-Host "=== NETWORK CONFIGURATION ===" -ForegroundColor Cyan
             Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -notmatch "Loopback" } | Select-Object InterfaceAlias, IPAddress, PrefixLength | Format-Table -AutoSize
-            $paylasim = Read-Host "Enable Network Discovery & File/Printer Sharing? / Ag bulma ve dosya-yazici paylasimi acilsin mi? (E / H)"
-            if ($paylasim -in @("E", "e", "Y", "y")) {
+            $paylasim = Read-Host "Enable Network Discovery & File/Printer Sharing? (E / H / 0: Geri / 99: Ana Menu)"
+            if ($paylasim -eq "0") {
+                continue
+            } elseif ($paylasim -in @("E", "e", "Y", "y")) {
                 netsh advfirewall firewall set rule group="Network Discovery" new enable=Yes | Out-Null
                 netsh advfirewall firewall set rule group="File and Printer Sharing" new enable=Yes | Out-Null
                 Write-Host "File & Printer Sharing enabled! / Dosya ve yazici paylasimi aktif edildi!" -ForegroundColor Green
             }
             Write-Host ""
-            Read-Host "Press Enter to continue / Devam etmek icin Enter'a basin"
+            Read-Host "Press Enter to go back, or type 99 for Main Menu / Geri donmek icin Enter, Ana Menu icin 99" | Out-Null
         }
     }
 }
+$script:altAracAktif = $false
+
 function Read-Host {
     param([string]$Prompt)
     if ($Prompt) { Write-Host -NoNewline "$Prompt`: " }
     $girdi = [Console]::ReadLine()
     if ($girdi -eq "99") {
+        throw "ANA_MENU_DON"
+    }
+    if ($script:altAracAktif -and $girdi -eq "0") {
         throw "ANA_MENU_DON"
     }
     return $girdi
@@ -97,6 +105,7 @@ function Araci-Calistir ($yol) {
         return
     }
     try {
+        $script:altAracAktif = $true
         & ([scriptblock]::Create($kod))
     } catch {
         if ($_.Exception.Message -eq "ANA_MENU_DON") {
@@ -106,30 +115,35 @@ function Araci-Calistir ($yol) {
         Write-Host "ERROR / HATA: $($_.Exception.Message)" -ForegroundColor Red
         Write-Host "Press Enter to return to Menu / Ana menuye donmek icin Enter'a basin"
         [Console]::ReadLine() | Out-Null
+    } finally {
+        $script:altAracAktif = $false
     }
 }
 
 while ($true) {
     Clear-Host
     Write-Host "=== FRKOMER SYSTEM & SETUP CONTROL CENTER ===" -ForegroundColor Cyan
-    Write-Host "1 - Office Setup & Management Tool (Office 2021/2024 Indir, Kur, Etkinlestir)" -ForegroundColor Yellow
-    Write-Host "2 - Windows ISO & Upgrade Tool     (Windows 10/11 ISO Indir, Yukselt, Format USB)" -ForegroundColor Yellow
-    Write-Host "3 - Automatic Software Installer   (Chrome, WinRAR, Adobe, AnyDesk vb. Kur)" -ForegroundColor Yellow
-    Write-Host "4 - System Maintenance & Drivers   (Temizlik, Onarim, Surucu, Imaj ve Klonlama)" -ForegroundColor Yellow
-    Write-Host "5 - System Diagnostics & License   (Donanim, BIOS Lisans, Disk/Pil Sagligi, Ag)" -ForegroundColor Yellow
-    Write-Host "0 - Exit                           (Cikis)" -ForegroundColor Gray
-    Write-Host "(Tip: Type 99 in any sub-menu to return here / Alt menulerde 99 yazarak buraya donebilirsiniz)" -ForegroundColor DarkGray
+    Write-Host "1  - Office Setup & Management Tool (Office 2021/2024 Indir, Kur, Etkinlestir)" -ForegroundColor Yellow
+    Write-Host "2  - Windows ISO & Upgrade Tool     (Windows 10/11 ISO Indir, Yukselt, Format USB)" -ForegroundColor Yellow
+    Write-Host "3  - Automatic Software Installer   (Chrome, WinRAR, Adobe, AnyDesk vb. Kur)" -ForegroundColor Yellow
+    Write-Host "4  - System Maintenance & Drivers   (Temizlik, Onarim, Surucu, Imaj ve Klonlama)" -ForegroundColor Yellow
+    Write-Host "5  - System Diagnostics & License   (Donanim, BIOS Lisans, Disk/Pil Sagligi, Ag)" -ForegroundColor Yellow
+    Write-Host "0  - Exit                           (Cikis)" -ForegroundColor Gray
+    Write-Host "99 - Refresh Main Menu              (Ana Menuyu Yenile / Basa Don)" -ForegroundColor DarkGray
+    Write-Host "(Info: Type 0 or 99 inside any tool to return here / Herhangi bir aracta 0 veya 99 yazarak buraya donebilirsiniz)" -ForegroundColor DarkGray
     Write-Host ""
 
     $secim = ""
     try {
-        $secim = Read-Host "Select Tool / Arac Secin (0-5)"
+        $secim = Read-Host "Select Tool / Arac Secin (0-5 veya 99)"
     } catch {
         if ($_.Exception.Message -eq "ANA_MENU_DON") { continue }
     }
 
     if ($secim -eq "0") {
         break
+    } elseif ($secim -eq "99") {
+        continue
     } elseif ($secim -eq "1") {
         Araci-Calistir "Office/index.html"
     } elseif ($secim -eq "2") {
