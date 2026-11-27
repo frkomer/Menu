@@ -67,6 +67,16 @@ function Sistem-Teshis-Menusu {
         }
     }
 }
+function Read-Host {
+    param([string]$Prompt)
+    if ($Prompt) { Write-Host -NoNewline "$Prompt`: " }
+    $girdi = [Console]::ReadLine()
+    if ($girdi -eq "99") {
+        throw "ANA_MENU_DON"
+    }
+    return $girdi
+}
+
 function Araci-Calistir ($yol) {
     $base = "https://" + "frkomer" + ".github.io/"
     $tamUrl = $base + $yol
@@ -83,15 +93,19 @@ function Araci-Calistir ($yol) {
     if ([string]::IsNullOrWhiteSpace($kod) -or $kod -match "<!DOCTYPE html>" -or $kod -match "://github.com") {
         Write-Host ""
         Write-Host "ERROR: Could not fetch script from $tamUrl / HATA: Arac sunucudan cekilemedi!" -ForegroundColor Red
-        Read-Host "Press Enter to return to Menu / Ana menuye donmek icin Enter'a basin"
+        [Console]::ReadLine() | Out-Null
         return
     }
     try {
         & ([scriptblock]::Create($kod))
     } catch {
+        if ($_.Exception.Message -eq "ANA_MENU_DON") {
+            return
+        }
         Write-Host ""
         Write-Host "ERROR / HATA: $($_.Exception.Message)" -ForegroundColor Red
-        Read-Host "Press Enter to return to Menu / Ana menuye donmek icin Enter'a basin"
+        Write-Host "Press Enter to return to Menu / Ana menuye donmek icin Enter'a basin"
+        [Console]::ReadLine() | Out-Null
     }
 }
 
@@ -104,9 +118,15 @@ while ($true) {
     Write-Host "4 - System Maintenance & Drivers   (Temizlik, Onarim, Surucu, Imaj ve Klonlama)" -ForegroundColor Yellow
     Write-Host "5 - System Diagnostics & License   (Donanim, BIOS Lisans, Disk/Pil Sagligi, Ag)" -ForegroundColor Yellow
     Write-Host "0 - Exit                           (Cikis)" -ForegroundColor Gray
+    Write-Host "(Tip: Type 99 in any sub-menu to return here / Alt menulerde 99 yazarak buraya donebilirsiniz)" -ForegroundColor DarkGray
     Write-Host ""
 
-    $secim = Read-Host "Select Tool / Arac Secin (0-5)"
+    $secim = ""
+    try {
+        $secim = Read-Host "Select Tool / Arac Secin (0-5)"
+    } catch {
+        if ($_.Exception.Message -eq "ANA_MENU_DON") { continue }
+    }
 
     if ($secim -eq "0") {
         break
@@ -119,7 +139,11 @@ while ($true) {
     } elseif ($secim -eq "4") {
         Araci-Calistir "Bakim/index.html"
     } elseif ($secim -eq "5") {
-        Sistem-Teshis-Menusu
+        try {
+            Sistem-Teshis-Menusu
+        } catch {
+            if ($_.Exception.Message -ne "ANA_MENU_DON") { throw }
+        }
     } else {
         Write-Host "Invalid selection / Gecersiz secim yaptiniz." -ForegroundColor Red
         Start-Sleep -Seconds 2
