@@ -70,7 +70,7 @@ function Sistem-Teshis-Menusu {
 function Araci-Calistir ($url) {
     try {
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-        $kod = (Invoke-WebRequest -Uri $url -UseBasicParsing).Content
+        $kod = (Invoke-WebRequest -Uri $url -UseBasicParsing -Headers @{"Cache-Control"="no-cache"}).Content
         & ([scriptblock]::Create($kod))
     } catch {
         Write-Host ""
@@ -95,13 +95,13 @@ while ($true) {
     if ($secim -eq "0") {
         break
     } elseif ($secim -eq "1") {
-        Araci-Calistir "https://github.io"
+        Araci-Calistir "https://githubusercontent.com"
     } elseif ($secim -eq "2") {
-        Araci-Calistir "https://github.io"
+        Araci-Calistir "https://githubusercontent.com"
     } elseif ($secim -eq "3") {
-        Araci-Calistir "https://github.io"
+        Araci-Calistir "https://githubusercontent.com"
     } elseif ($secim -eq "4") {
-        Araci-Calistir "https://github.io"
+        Araci-Calistir "https://githubusercontent.com"
     } elseif ($secim -eq "5") {
         Sistem-Teshis-Menusu
     } else {
@@ -109,3 +109,5 @@ while ($true) {
         Start-Sleep -Seconds 2
     }
 }
+
+   
