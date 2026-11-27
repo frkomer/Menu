@@ -8,8 +8,8 @@ Windows 10/11 kurulumu, Office LTSC yönetimi, format sonrası katılımsız pro
 
 Windows üzerinde *PowerShell'i Yönetici Olarak Çalıştırın* ve aşağıdaki komutu yapıştırıp *Enter* tuşuna basın:
 
-powershell
-irm frkomer.github.io/Menu | iex
+    
+    irm frkomer.github.io/Menu | iex
 
 
 ---
