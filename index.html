@@ -67,20 +67,22 @@ function Sistem-Teshis-Menusu {
         }
     }
 }
-function Araci-Calistir ($url) {
+function Araci-Calistir ($yol) {
+    $base = "https://" + "frkomer" + ".github.io/"
+    $tamUrl = $base + $yol
     $kod = ""
     if (Get-Command curl.exe -ErrorAction SilentlyContinue) {
-        $kod = (curl.exe -sL $url) -join [Environment]::NewLine
+        $kod = (curl.exe -sL $tamUrl) -join [Environment]::NewLine
     }
     if ([string]::IsNullOrWhiteSpace($kod) -or $kod -match "<!DOCTYPE html>" -or $kod -match "://github.com") {
         try {
             [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-            $kod = Invoke-RestMethod -Uri $url -ErrorAction Stop
+            $kod = Invoke-RestMethod -Uri $tamUrl -ErrorAction Stop
         } catch {}
     }
     if ([string]::IsNullOrWhiteSpace($kod) -or $kod -match "<!DOCTYPE html>" -or $kod -match "://github.com") {
         Write-Host ""
-        Write-Host "ERROR: Could not fetch script from $url / HATA: Arac sunucudan cekilemedi!" -ForegroundColor Red
+        Write-Host "ERROR: Could not fetch script from $tamUrl / HATA: Arac sunucudan cekilemedi!" -ForegroundColor Red
         Read-Host "Press Enter to return to Menu / Ana menuye donmek icin Enter'a basin"
         return
     }
@@ -109,13 +111,13 @@ while ($true) {
     if ($secim -eq "0") {
         break
     } elseif ($secim -eq "1") {
-        Araci-Calistir "https://github.io"
+        Araci-Calistir "Office/index.html"
     } elseif ($secim -eq "2") {
-        Araci-Calistir "https://github.io"
+        Araci-Calistir "Windows/index.html"
     } elseif ($secim -eq "3") {
-        Araci-Calistir "https://github.io"
+        Araci-Calistir "Program/index.html"
     } elseif ($secim -eq "4") {
-        Araci-Calistir "https://github.io"
+        Araci-Calistir "Bakim/index.html"
     } elseif ($secim -eq "5") {
         Sistem-Teshis-Menusu
     } else {
