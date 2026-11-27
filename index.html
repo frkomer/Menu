@@ -68,9 +68,23 @@ function Sistem-Teshis-Menusu {
     }
 }
 function Araci-Calistir ($url) {
+    $kod = ""
+    if (Get-Command curl.exe -ErrorAction SilentlyContinue) {
+        $kod = (curl.exe -sL $url) -join [Environment]::NewLine
+    }
+    if ([string]::IsNullOrWhiteSpace($kod) -or $kod -match "<!DOCTYPE html>" -or $kod -match "://github.com") {
+        try {
+            [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+            $kod = Invoke-RestMethod -Uri $url -ErrorAction Stop
+        } catch {}
+    }
+    if ([string]::IsNullOrWhiteSpace($kod) -or $kod -match "<!DOCTYPE html>" -or $kod -match "://github.com") {
+        Write-Host ""
+        Write-Host "ERROR: Could not fetch script from $url / HATA: Arac sunucudan cekilemedi!" -ForegroundColor Red
+        Read-Host "Press Enter to return to Menu / Ana menuye donmek icin Enter'a basin"
+        return
+    }
     try {
-        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-        $kod = Invoke-RestMethod -Uri $url
         & ([scriptblock]::Create($kod))
     } catch {
         Write-Host ""
